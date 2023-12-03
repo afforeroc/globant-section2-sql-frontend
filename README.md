@@ -5,6 +5,7 @@
 streamlit
 pandas
 dash
+"snowflake-connector-python[secure-local-storage,pandas]"
 ```
 
 ## Instructions to configure the frontend in local way
