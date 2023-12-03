@@ -1,16 +1,32 @@
 # -*- coding: utf-8 -*-
 
+"""
+This script connects to Snowflake using the provided credentials from the .env file,
+executes two SQL queries, and displays the results using Streamlit and Dash DataTables.
+"""
+
+
 from dotenv import dotenv_values
-import pandas as pd
 import snowflake.connector
-import streamlit as st
 from dash import dash_table
+import streamlit as st
+
 
 # Load JSON data from the .env file
 snowflake_credentials = dotenv_values(".env")
 
+
 # Connect to Snowflake
 def create_snowflake_connection():
+    """
+    Connects to Snowflake using the provided credentials from the .env file.
+
+    Returns:
+    snowflake.connector.connection.SnowflakeConnection: A Snowflake connection object.
+
+    Raises:
+    snowflake.connector.errors.DatabaseError: If there is an error connecting to Snowflake.
+    """
     try:
         snowflake_connection = snowflake.connector.connect(
             user=snowflake_credentials["user_login"],
@@ -21,8 +37,8 @@ def create_snowflake_connection():
             schema=snowflake_credentials["schema"]
         )
         return snowflake_connection
-    except snowflake.connector.errors.DatabaseError as e:
-        st.error(f"Error connecting to Snowflake: {str(e)}")
+    except snowflake.connector.errors.DatabaseError as snowflake_error:
+        st.error(f"Error connecting to Snowflake: {str(snowflake_error)}")
         raise
 
 

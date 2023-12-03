@@ -1,5 +1,4 @@
-streamlit
-pandas
-dash
 python-dotenv
+streamlit
+dash
 "snowflake-connector-python[secure-local-storage,pandas]"

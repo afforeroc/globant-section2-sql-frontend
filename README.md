@@ -3,7 +3,6 @@
 ## Dependencies
 ```
 streamlit
-pandas
 dash
 "snowflake-connector-python[secure-local-storage,pandas]"
 ```
