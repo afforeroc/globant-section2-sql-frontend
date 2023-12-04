@@ -11,12 +11,8 @@ from dash import dash_table
 import streamlit as st
 
 
-# Load JSON data from the .env file
-snowflake_credentials = dotenv_values(".env")
-
-
 # Connect to Snowflake
-def create_snowflake_connection():
+def create_snowflake_connection(snowflake_credentials):
     """
     Connects to Snowflake using the provided credentials from the .env file.
 
@@ -43,8 +39,12 @@ def create_snowflake_connection():
 
 if __name__ == "__main__":
     try:
+        # Load .env variables
+        # snowflake_credentials = dotenv_values(".env")
+        snowflake_credentials = st.secrets["snowflake_credentials"]
+        
         # Snowflake connection
-        ctx = create_snowflake_connection()
+        ctx = create_snowflake_connection(snowflake_credentials)
 
         # Create a cursor object
         cur = ctx.cursor()
@@ -141,6 +141,8 @@ if __name__ == "__main__":
 
     # Query 1
     st.header('Requirement 1')
+    st.write("Number of employees hired for each job and department in 2021 divided by quarter.")
+    st.write("The table is initially ordered alphabetically by department and job.")
     # Create a Dash DataTable
     query1_dash_table = dash_table.DataTable(
         query1_df.to_dict("records")
@@ -150,6 +152,8 @@ if __name__ == "__main__":
 
     # Query 2
     st.header('Requirement 2')
+    st.write("List of ids, name and number of employees hired of each department that hired more employees than the mean of employees hired in 2021 for all the departments.") 
+    st.write("The table is initially ordered by the number of employees hired (descending).")
     # Create a Dash DataTable
     query2_dash_table = dash_table.DataTable(
         query2_df.to_dict("records")

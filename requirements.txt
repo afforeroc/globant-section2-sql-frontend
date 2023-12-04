@@ -1,4 +1,4 @@
 python-dotenv
 streamlit
 dash
-"snowflake-connector-python[secure-local-storage,pandas]"
+snowflake-connector-python[secure-local-storage,pandas]
