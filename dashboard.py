@@ -5,7 +5,6 @@ This script connects to Snowflake using the provided credentials from the .env f
 executes two SQL queries, and displays the results using Streamlit and Dash DataTables.
 """
 
-
 from dotenv import dotenv_values
 import snowflake.connector
 from dash import dash_table
@@ -47,16 +46,84 @@ if __name__ == "__main__":
         # Snowflake connection
         ctx = create_snowflake_connection()
 
-        # Create a cursor object.
+        # Create a cursor object
         cur = ctx.cursor()
 
         # Execute a statement and fetch the result into df
-        query1 = "select * from jobs"
+        query1 = \
+            """
+            WITH QUERY1 AS (
+                SELECT
+                    HE.ID AS ID,
+                    DE.DEPARTMENT AS DEPARTMENT,
+                    JO.JOB AS JOB,
+                    CONCAT('Q', EXTRACT(QUARTER FROM HE.DATETIME)) AS QUARTER
+                FROM
+                    GLOBANT_CHALLENGE_DB.RECRUITING.HIRED_EMPLOYEES HE
+                    LEFT JOIN GLOBANT_CHALLENGE_DB.RECRUITING.DEPARTMENTS DE ON HE.DEPARTMENT_ID = DE.ID
+                    LEFT JOIN GLOBANT_CHALLENGE_DB.RECRUITING.JOBS JO ON HE.JOB_ID = JO.ID
+                WHERE
+                    EXTRACT(YEAR FROM DATETIME) = 2021
+            ),
+            QUERY2 AS (
+                SELECT
+                    *
+                FROM
+                    QUERY1
+                PIVOT (
+                    COUNT(ID)
+                    FOR QUARTER IN (
+                        'Q1',
+                        'Q2',
+                        'Q3',
+                        'Q4'
+                    )
+                ) AS PIVOT_TABLE
+            )
+            SELECT 
+                DEPARTMENT,
+                JOB,
+                "'Q1'" AS Q1,
+                "'Q2'" AS Q2,
+                "'Q3'" AS Q3,
+                "'Q4'" AS Q4
+            FROM
+                QUERY2
+            ORDER BY 
+                DEPARTMENT, JOB
+            """
         cur.execute(query1)
         query1_df = cur.fetch_pandas_all()
 
         # Execute a statement and fetch the result into df
-        query2 = "select * from departments"
+        query2 = \
+            """
+            WITH QUERY1 AS (
+                SELECT
+                    HE.ID AS HE_ID,
+                    DE.ID AS DE_ID,
+                    DE.DEPARTMENT AS DEPARTMENT
+                FROM
+                    GLOBANT_CHALLENGE_DB.RECRUITING.HIRED_EMPLOYEES HE
+                    LEFT JOIN GLOBANT_CHALLENGE_DB.RECRUITING.DEPARTMENTS DE ON HE.DEPARTMENT_ID = DE.ID
+                WHERE
+                    EXTRACT(YEAR FROM DATETIME) = 2021
+            ),
+            QUERY2 AS (
+                SELECT
+                    DE_ID AS ID,
+                    DEPARTMENT AS DEPARTMENT,
+                    COUNT(HE_ID) AS HIRED
+                FROM
+                    QUERY1
+                GROUP BY
+                    DE_ID, DEPARTMENT
+                ORDER BY COUNT(HE_ID) DESC
+            )
+            SELECT *
+            FROM QUERY2
+            WHERE HIRED > (SELECT AVG(HIRED) FROM QUERY2)
+            """
         cur.execute(query2)
         query2_df = cur.fetch_pandas_all()
 
@@ -73,7 +140,7 @@ if __name__ == "__main__":
     st.title("Stakeholder's Dashboard")
 
     # Query 1
-    st.header('Query 1')
+    st.header('Requirement 1')
     # Create a Dash DataTable
     query1_dash_table = dash_table.DataTable(
         query1_df.to_dict("records")
@@ -82,7 +149,7 @@ if __name__ == "__main__":
     st.dataframe(query1_dash_table.data)
 
     # Query 2
-    st.header('Query 2')
+    st.header('Requirement 2')
     # Create a Dash DataTable
     query2_dash_table = dash_table.DataTable(
         query2_df.to_dict("records")
